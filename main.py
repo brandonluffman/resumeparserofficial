@@ -110,9 +110,11 @@ def extract_text_with_pdfminer(pdf_path):
     return extract_text(pdf_path)
 
 def is_continuation_of_previous(prev_text, current_text):
-    """Determine if the current_text is a continuation of prev_text."""
     if not prev_text or not current_text:
         return False
+
+    # Check if the previous text ends with a bullet point
+    bullet_point_condition = prev_text[-1] in {'•', '-', '*', '>', '+'}
 
     # Check if the previous text does not end with typical sentence-ending punctuation
     end_condition = not prev_text[-1] in {'.', '!', '?'}
@@ -120,7 +122,7 @@ def is_continuation_of_previous(prev_text, current_text):
     # Check if the current text starts with a lowercase letter
     continuation_condition = current_text[0].islower()
 
-    return end_condition and continuation_condition
+    return (end_condition and continuation_condition) or bullet_point_condition
 
 def analyze_layout(pdf_path):
     previous_text = None
