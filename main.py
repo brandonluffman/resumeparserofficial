@@ -14,9 +14,18 @@ import shutil
 import PyPDF2
 from spacy.matcher import PhraseMatcher
 from collections import OrderedDict
+import tarfile
 
-nlp = spacy.load("en_core_web_sm")
+# nlp = spacy.load("en_core_web_sm")
+model_tar_path = "en_core_web_sm.tar.gz"
+extracted_path = "en_core_web_sm"
 
+# Extract the model
+with tarfile.open(model_tar_path, "r:gz") as tar:
+    tar.extractall(path=extracted_path)
+
+# Load the model from the extracted directory
+nlp = spacy.load(extracted_path)
 app = FastAPI()
 origins = ["*"]
 
