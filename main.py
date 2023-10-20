@@ -15,6 +15,7 @@ from spacy.matcher import PhraseMatcher
 from collections import OrderedDict
 import en_core_web_sm
 from pdfminer.high_level import extract_text
+from pdfminer.layout import LTTextBox, LTTextLine
 
 nlp = en_core_web_sm.load()
 
@@ -69,7 +70,7 @@ def is_potential_header(text, doc, start, end):
 
 def clean_text_content(content):
     return re.sub(r'\s{2,}', ' | ', content)
-
+    
 def extract_segments_from_text(text):
     doc = nlp(text)
     matches = matcher(doc)
@@ -107,6 +108,43 @@ def extract_segments_from_text(text):
 def extract_text_with_pdfminer(pdf_path):
     return extract_text(pdf_path)
 
+def is_continuation_of_previous(prev_text, current_text):
+    """Determine if the current_text is a continuation of prev_text."""
+    if not prev_text or not current_text:
+        return False
+
+    # Check if the previous text does not end with typical sentence-ending punctuation
+    end_condition = not prev_text[-1] in {'.', '!', '?'}
+
+    # Check if the current text starts with a lowercase letter
+    continuation_condition = current_text[0].islower()
+
+    return end_condition and continuation_condition
+
+def analyze_layout(pdf_path):
+    previous_text = None
+    extracted_content = []
+
+    for page_layout in extract_pages(pdf_path):
+        for element in page_layout:
+            if isinstance(element, LTTextBox):
+                for text_line in element:
+                    if isinstance(text_line, LTTextLine):
+                        current_text = text_line.get_text().strip()
+
+                        if is_continuation_of_previous(previous_text, current_text):
+                            previous_text += ' ' + current_text
+                        else:
+                            if previous_text:
+                                extracted_content.append(previous_text)
+                            previous_text = current_text
+
+    # Append the last line
+    if previous_text:
+        extracted_content.append(previous_text)
+
+    return '\n'.join(extracted_content)
+
 @app.post("/convert-pdf-to-text/")
 async def convert_pdf_to_text(file: UploadFile):
     if not file.filename.endswith('.pdf'):
@@ -116,7 +154,8 @@ async def convert_pdf_to_text(file: UploadFile):
     pdf_path = temp_dir / file.filename
     with open(pdf_path, "wb") as pdf_file:
         shutil.copyfileobj(file.file, pdf_file)
-    pdf_text = extract_text_with_pdfminer(pdf_path)
+    # pdf_text = extract_text_with_pdfminer(pdf_path)
+    pdf_text = analyze_layout(pdf_path)  # Use the modified function here
     segments = extract_segments_from_text(pdf_text)
     shutil.rmtree(temp_dir)
     return {"pdf_text": pdf_text, "segments": segments}
