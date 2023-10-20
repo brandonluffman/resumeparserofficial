@@ -173,10 +173,11 @@ async def convert_pdf_to_text(file: UploadFile):
     # pdf_text = extract_text_with_pdfminer(pdf_path)
     pdf_text = analyze_layout(pdf_path)  # Use the modified function here
     segments = extract_segments_from_text(pdf_text)
-    grade = grade_resume(pdf_text)
+    grade, detected_categories = grade_resume(pdf_text)
+    detected_dict = {category: category in detected_categories for category in categories}
 
     shutil.rmtree(temp_dir)
-    return {"pdf_text": pdf_text, "segments": segments, "grade": grade}
+    return {"pdf_text": pdf_text, "segments": segments, "grade": grade, "detected_categories": detected_dict}
 
 
 
