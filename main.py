@@ -17,7 +17,7 @@ from collections import OrderedDict
 import tarfile
 
 # nlp = spacy.load("en_core_web_sm")
-model_tar_path = "en_core_web_sm.tar.gz"
+model_tar_path = "en_core_web_sm-2.2.0.tar.gz"
 extracted_path = "en_core_web_sm"
 
 # Extract the model
