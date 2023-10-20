@@ -165,3 +165,4 @@ async def convert_pdf_to_text(file: UploadFile):
     shutil.rmtree(temp_dir)
 
     return {"pdf_text": pdf_text, "segments": segments}
+
