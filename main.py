@@ -19,6 +19,10 @@ nlp = spacy.load("en_core_web_sm")
 
 app = FastAPI()
 origins = ["*"]
+origins = [
+    "https://resumebuilder-olive.vercel.app",
+    "http://localhost:3000",  # for local development
+]
 
 app.add_middleware(
     CORSMiddleware,
