@@ -159,7 +159,7 @@ def grade_resume(resume_text):
     # Calculate the score
     score = len(detected_categories) / 9
     
-    return score
+    return score, detected_categories
 
 @app.post("/convert-pdf-to-text/")
 async def convert_pdf_to_text(file: UploadFile):
