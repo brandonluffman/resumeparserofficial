@@ -16,16 +16,9 @@ from spacy.matcher import PhraseMatcher
 from collections import OrderedDict
 import tarfile
 
-# nlp = spacy.load("en_core_web_sm")
-model_tar_path = "en_core_web_sm-2.2.0.tar.gz"
-extracted_path = "en_core_web_sm"
-
-# Extract the model
-with tarfile.open(model_tar_path, "r:gz") as tar:
-    tar.extractall(path=extracted_path)
+nlp = spacy.load("en_core_web_sm")
 
 # Load the model from the extracted directory
-nlp = spacy.load(extracted_path)
 app = FastAPI()
 origins = ["*"]
 
