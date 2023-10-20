@@ -15,6 +15,7 @@ from spacy.matcher import PhraseMatcher
 from collections import OrderedDict
 import en_core_web_sm
 from pdfminer.high_level import extract_text
+from pdfminer.high_level import extract_pages
 from pdfminer.layout import LTTextBox, LTTextLine
 
 nlp = en_core_web_sm.load()
