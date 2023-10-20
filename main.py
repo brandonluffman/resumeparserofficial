@@ -15,8 +15,9 @@ import PyPDF2
 from spacy.matcher import PhraseMatcher
 from collections import OrderedDict
 import tarfile
-
-nlp = spacy.load("en_core_web_sm")
+import en_core_web_sm
+nlp = en_core_web_sm.load()
+# nlp = spacy.load("en_core_web_sm")
 
 # Load the model from the extracted directory
 app = FastAPI()
