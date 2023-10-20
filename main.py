@@ -148,6 +148,19 @@ def analyze_layout(pdf_path):
 
     return '\n'.join(extracted_content)
 
+def grade_resume(resume_text):
+    doc = nlp(resume_text)
+    matches = matcher(doc)
+    
+    detected_categories = set()  # Using a set to ensure unique categories
+    for match_id, start, end in matches:
+        detected_categories.add(nlp.vocab.strings[match_id])
+        
+    # Calculate the score
+    score = len(detected_categories) / 9
+    
+    return score
+
 @app.post("/convert-pdf-to-text/")
 async def convert_pdf_to_text(file: UploadFile):
     if not file.filename.endswith('.pdf'):
@@ -160,8 +173,10 @@ async def convert_pdf_to_text(file: UploadFile):
     # pdf_text = extract_text_with_pdfminer(pdf_path)
     pdf_text = analyze_layout(pdf_path)  # Use the modified function here
     segments = extract_segments_from_text(pdf_text)
+    grade = grade_resume(pdf_text)
+
     shutil.rmtree(temp_dir)
-    return {"pdf_text": pdf_text, "segments": segments}
+    return {"pdf_text": pdf_text, "segments": segments, "grade": grade}
 
 
 
