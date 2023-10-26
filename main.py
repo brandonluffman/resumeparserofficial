@@ -12,7 +12,7 @@ from pdfminer.layout import LTTextBox, LTTextLine
 from actionwords import actionWordsList
 from pdfminer.pdfparser import PDFParser
 from pdfminer.pdfdocument import PDFDocument
-import language_tool_python  
+# import language_tool_python  
 from pdfminer.pdfpage import PDFPage
 from pdfminer.layout import LTTextContainer
 from pdfminer.layout import LTChar
@@ -308,22 +308,22 @@ def get_pdf_page_count(pdf_path):
 
 ###### GRAMMAR ######
 
-def has_mistakes(text):
-    my_tool = language_tool_python.LanguageTool('en-US')  
+# def has_mistakes(text):
+#     my_tool = language_tool_python.LanguageTool('en-US')  
 
-    # getting the matches  
-    my_matches = my_tool.check(text)  
+#     # getting the matches  
+#     my_matches = my_tool.check(text)  
     
-    # defining some variables  
-    myMistakes = []  
+#     # defining some variables  
+#     myMistakes = []  
     
-    # using the for-loop  
-    for rules in my_matches:  
-        if len(rules.replacements) > 0:  
-            myMistakes.append(text[rules.offset : rules.errorLength + rules.offset])  
+#     # using the for-loop  
+#     for rules in my_matches:  
+#         if len(rules.replacements) > 0:  
+#             myMistakes.append(text[rules.offset : rules.errorLength + rules.offset])  
     
-    # Return True if there are mistakes, False otherwise
-    return len(myMistakes) > 0
+#     # Return True if there are mistakes, False otherwise
+#     return len(myMistakes) > 0
 
 
 
@@ -387,7 +387,7 @@ async def convert_pdf_to_text(file: UploadFile):
     bullet_check = check_bullets(pdf_text)
     page_count = get_pdf_page_count(pdf_path)
     # consistency = check_font_consistency(pdf_path)
-    grammar = has_mistakes(pdf_text)
+    # grammar = has_mistakes(pdf_text)
     first_person = check_first_person_pronouns(pdf_text)
     detected_dict = {category: category in detected_categories for category in categories}
     grade_percentage = calculate_grade({
@@ -397,7 +397,7 @@ async def convert_pdf_to_text(file: UploadFile):
     "threequarters": threequarters, 
     "bulletcheck": bullet_check,
     "pagecount": page_count,
-    "grammar": grammar,
+    # "grammar": grammar,
     "firstperson": first_person,
     "experiencefirst": is_experience_first
 })
@@ -413,7 +413,7 @@ async def convert_pdf_to_text(file: UploadFile):
         "bulletcheck": bullet_check,
         "pagecount": page_count,
         # "consistency": consistency,
-        "grammar": grammar,
+        # "grammar": grammar,
         "firstperson": first_person,
         "experiencefirst": is_experience_first,
         "overallgrade": grade_percentage
