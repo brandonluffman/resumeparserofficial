@@ -6,3 +6,4 @@ uvicorn==0.23.2
 en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.0/en_core_web_sm-3.7.0.tar.gz
 python_multipart==0.0.6
 pdfminer.six==20221105
+language-tool-python==2.7.1
