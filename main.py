@@ -353,7 +353,7 @@ def calculate_grade(data):
         # len(data['bulletcheck']) > 0,  # Assuming bulletcheck returns a list and you want to check if it's non-empty
         data['pagecount'] <= 2,  # Assuming 2 pages or less gets a point
         # data['consistency'],  # Uncomment once consistency is back in
-        not data['grammar'],  # Assuming grammar returns true for mistakes. So, we reverse the logic here.
+        # not data['grammar'],  # Assuming grammar returns true for mistakes. So, we reverse the logic here.
         not data['firstperson'],  # Assuming firstperson returns true for usage of first-person pronouns. So, we reverse the logic.
         data['experiencefirst']
     ])
