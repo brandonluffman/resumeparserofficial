@@ -241,7 +241,12 @@ async def analyze_texts(job_description: str = Form(...), resume: UploadFile = F
     resume_tfidf_dict = dict(zip(resume_feature_names, resume_tfidf_scores))
     sorted_resume_tfidf_dict = dict(sorted(resume_tfidf_dict.items(), key=lambda item: item[1], reverse=True))
 
+    top_job_terms = set(list(sorted_job_tfidf_dict.keys())[:20])  # Top 20 terms in job description
+    resume_terms = set(resume_tfidf_dict.keys())
+    terms_to_add = top_job_terms - resume_terms
+
     return {
         "job_description_tfidf": sorted_job_tfidf_dict,
-        "resume_tfidf": sorted_resume_tfidf_dict
+        "resume_tfidf": sorted_resume_tfidf_dict,
+        "suggested_terms_to_add": list(terms_to_add)
     }
