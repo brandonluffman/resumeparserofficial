@@ -45,7 +45,6 @@ def extract_text_from_pdf(pdf_bytes):
 # Example usage
 # pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
 # text = extract_text_from_pdf(pdf_path)
-# print(text)
 
 
 
@@ -94,23 +93,55 @@ def check_categories(text, categories):
     
 # One Page #
 
-def is_one_page(text):
-    return True
+def is_one_page(pdf_bytes):
+    reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+    return len(reader.pages) == 1
 
-# def is_one_page(pdf_bytes):
-#     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
-#     text = ''
-#     for page in reader.pages:
-#         text += page.extract_text() + '\n'
-#     return text
 
 # First Person Pronouns #
-    
+
 def contains_first_person_pronouns(text):
-    pronouns = ['I', 'me', 'my', 'mine', 'myself']
-    return any(pronoun in text for pronoun in pronouns)
+    # Define a list of first person pronouns
+    pronouns = ["I", "me", "my", "mine", "myself", "we", "us", "our", "ours", "ourselves"]
+
+    # Use regex to match words to ensure that substrings inside other words aren't counted
+    matches = []
+
+    for pronoun in pronouns:
+        pattern = r'\b' + pronoun + r'\b'  # Using word boundaries to ensure whole word match
+        if re.search(pattern, text, re.IGNORECASE):
+            matches.append(pronoun)
+    
+    print(matches)
+
+    if len(matches) > 0:
+        return True
+    else:
+        return False
+
+
 
 # Grammar #
+
+
+# Action Words #
+
+def check_action_words_in_text(actionWordsList, text):
+    matches = []
+
+    for word in actionWordsList:
+        pattern = r'\b' + word + r'\b'  # Using word boundaries to ensure whole word match
+        if re.search(pattern, text, re.IGNORECASE):
+            matches.append(word)
+
+    if len(matches) > 0:
+        print(matches)
+        matches = True;
+        print('There are matches')
+    else:
+        matches = False;
+        print('There are no matches')
+    return matches
 
 
 
@@ -129,14 +160,16 @@ def contains_first_person_pronouns(text):
 async def parse_resume(file: UploadFile = File(...)):
     contents = await file.read()
     text = extract_text_from_pdf(contents)
-    
+    print(text)
+
     data = {
         "Phone Number": find_phone_number(text),
         "Email Address": find_email_address(text),
         "Address": find_address(text),
         "Categories": check_categories(text, categories),
-        "One Page": is_one_page(contents),
-        "First Person Pronouns": contains_first_person_pronouns(text)
+        "Is One Page": is_one_page(contents),
+        "Contains First Person Pronouns": contains_first_person_pronouns(text),
+        "Has Action Words": check_action_words_in_text(actionWordsList, text)
     }
     
     return data
