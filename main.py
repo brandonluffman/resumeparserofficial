@@ -36,8 +36,8 @@ def extract_text_from_pdf(pdf_path):
     return text
 
 # Example usage
-pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
-text = extract_text_from_pdf(pdf_path)
+# pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
+# text = extract_text_from_pdf(pdf_path)
 # print(text)
 
 
