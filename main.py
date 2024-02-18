@@ -1,9 +1,11 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from actionwords import actionWordsList
 import PyPDF2
 import re
 import io
+from sklearn.feature_extraction.text import TfidfVectorizer
+from collections import Counter
 
 
 
@@ -174,3 +176,72 @@ async def parse_resume(file: UploadFile = File(...)):
     data["Resume Grade"] = grade
     
     return data
+
+
+
+@app.post("/analyze-tfidf/")
+async def analyze_tfidf(file: UploadFile = File(...)):
+    contents = await file.read()
+    text = extract_text_from_pdf(contents)
+
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
+
+    # Convert the text into a list for the TfidfVectorizer
+    text_list = [text]
+
+    # Initialize the TfidfVectorizer with English stopwords
+    vectorizer = TfidfVectorizer(stop_words='english')
+
+    # Fit and transform the text data
+    tfidf_matrix = vectorizer.fit_transform(text_list)
+
+    # Get the feature names (words) and their TF-IDF scores
+    feature_names = vectorizer.get_feature_names_out()
+    tfidf_scores = tfidf_matrix.toarray().flatten()
+
+    # Combine the words and their scores into a dictionary
+    tfidf_dict = dict(zip(feature_names, tfidf_scores))
+
+    # Sort the dictionary by TF-IDF scores in descending order
+    sorted_tfidf_dict = dict(sorted(tfidf_dict.items(), key=lambda item: item[1], reverse=True))
+
+    return sorted_tfidf_dict
+
+def preprocess_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
+    return text
+
+@app.post("/analyze-texts/")
+async def analyze_texts(job_description: str = Form(...), resume: UploadFile = File(...)):
+    # Extract text from resume PDF
+    resume_contents = await resume.read()
+    resume_text = extract_text_from_pdf(resume_contents)
+
+    # Preprocess job description and resume text
+    job_description = preprocess_text(job_description)
+    resume_text = preprocess_text(resume_text)
+
+    # Analyze job description text using TF-IDF
+    job_vectorizer = TfidfVectorizer(stop_words='english')
+    job_tfidf_matrix = job_vectorizer.fit_transform([job_description])
+    job_feature_names = job_vectorizer.get_feature_names_out()
+    job_tfidf_scores = job_tfidf_matrix.toarray().flatten()
+    job_tfidf_dict = dict(zip(job_feature_names, job_tfidf_scores))
+    sorted_job_tfidf_dict = dict(sorted(job_tfidf_dict.items(), key=lambda item: item[1], reverse=True))
+
+    # Analyze resume text using TF-IDF
+    resume_vectorizer = TfidfVectorizer(stop_words='english')
+    resume_tfidf_matrix = resume_vectorizer.fit_transform([resume_text])
+    resume_feature_names = resume_vectorizer.get_feature_names_out()
+    resume_tfidf_scores = resume_tfidf_matrix.toarray().flatten()
+    resume_tfidf_dict = dict(zip(resume_feature_names, resume_tfidf_scores))
+    sorted_resume_tfidf_dict = dict(sorted(resume_tfidf_dict.items(), key=lambda item: item[1], reverse=True))
+
+    return {
+        "job_description_tfidf": sorted_job_tfidf_dict,
+        "resume_tfidf": sorted_resume_tfidf_dict
+    }
