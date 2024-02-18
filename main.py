@@ -27,38 +27,24 @@ categories = {
 
 
 #### Resume Text Extraction ######
-
-# def extract_text_from_pdf(pdf_path):
-#     with open(pdf_path, 'rb') as file:
-#         reader = PyPDF2.PdfReader(file)
-#         text = ''
-#         for page in reader.pages:
-#             text += page.extract_text() + '\n'
-#     return text
-
 def extract_text_from_pdf(pdf_bytes):
     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
     text = ''
     for page in reader.pages:
         text += page.extract_text() + '\n'
     return text
-# Example usage
-# pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
-# text = extract_text_from_pdf(pdf_path)
 
 
 
 #### Sections ####
 
 # Phone Number #
-
 def find_phone_number(text):
     phone_pattern = re.compile(r'\b\d{3}[-.\s]?\d{3}[-.\s]?\d{4}\b')
     match = phone_pattern.search(text)
     return match.group() if match else None
 
 # Email Address #
-
 def find_email_address(text):
     email_pattern = re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b')
     match = email_pattern.search(text)
@@ -66,7 +52,6 @@ def find_email_address(text):
 
 
 # Address #
-
 def find_address(text):
     # List of US state abbreviations for the regex pattern
     states = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 
@@ -79,7 +64,6 @@ def find_address(text):
     return match.group() if match else None
 
 # Categories #
-
 def check_categories(text, categories):
     category_presence = {}
     for category, keywords in categories.items():
@@ -92,14 +76,12 @@ def check_categories(text, categories):
 #### Rules ####
     
 # One Page #
-
 def is_one_page(pdf_bytes):
     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
     return len(reader.pages) == 1
 
 
 # First Person Pronouns #
-
 def contains_first_person_pronouns(text):
     # Define a list of first person pronouns
     pronouns = ["I", "me", "my", "mine", "myself", "we", "us", "our", "ours", "ourselves"]
@@ -115,9 +97,9 @@ def contains_first_person_pronouns(text):
     print(matches)
 
     if len(matches) > 0:
-        return True
-    else:
         return False
+    else:
+        return True
 
 
 
@@ -125,12 +107,11 @@ def contains_first_person_pronouns(text):
 
 
 # Action Words #
-
 def check_action_words_in_text(actionWordsList, text):
     matches = []
 
     for word in actionWordsList:
-        pattern = r'\b' + word + r'\b'  # Using word boundaries to ensure whole word match
+        pattern = r'\b' + word + r'\b'
         if re.search(pattern, text, re.IGNORECASE):
             matches.append(word)
 
@@ -143,6 +124,17 @@ def check_action_words_in_text(actionWordsList, text):
         print('There are no matches')
     return matches
 
+# Quantify 
+def check_quantify(text):
+    pattern = r'(\d+(\.\d{1,2})?)%'
+    matches = re.findall(pattern, text)    
+    percentages = [match[0] for match in matches]
+    if percentages:
+        percentages = True;
+    else:
+        percentages = False;
+    
+    return percentages
 
 
 
@@ -154,13 +146,14 @@ def check_action_words_in_text(actionWordsList, text):
 #     print(f"{category}: {'Yes' if present else 'No'}")
 # print("One Page:", is_one_page(pdf_path))
 # print("First Person Pronouns:", contains_first_person_pronouns(text))
+# pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
+# text = extract_text_from_pdf(pdf_path)
 
 
 @app.post("/parse-resume/")
 async def parse_resume(file: UploadFile = File(...)):
     contents = await file.read()
     text = extract_text_from_pdf(contents)
-    print(text)
 
     data = {
         "Phone Number": find_phone_number(text),
@@ -169,7 +162,15 @@ async def parse_resume(file: UploadFile = File(...)):
         "Categories": check_categories(text, categories),
         "Is One Page": is_one_page(contents),
         "Contains First Person Pronouns": contains_first_person_pronouns(text),
-        "Has Action Words": check_action_words_in_text(actionWordsList, text)
+        "Has Action Words": check_action_words_in_text(actionWordsList, text),
+        "Is Quantified": check_quantify(text)
     }
+
+    true_count = sum(value == True for value in data.values() if isinstance(value, bool))
+    category_true_count = sum(data["Categories"].values())
+    total_checks = len([value for value in data.values() if isinstance(value, bool)]) + len(data["Categories"])
+    grade = (true_count + category_true_count) / total_checks
+
+    data["Resume Grade"] = grade
     
     return data
