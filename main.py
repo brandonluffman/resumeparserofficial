@@ -3,7 +3,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from actionwords import actionWordsList
 import PyPDF2
 import re
-import language_tool_python
 
 
 
