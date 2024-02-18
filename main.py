@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from actionwords import actionWordsList
 import PyPDF2
@@ -103,11 +103,28 @@ def contains_first_person_pronouns(text):
 
 
 
-print("Phone Number:", find_phone_number(text))
-print("Email Address:", find_email_address(text))
-print("Address:", find_address(text))
-category_presence = check_categories(text, categories)
-for category, present in category_presence.items():
-    print(f"{category}: {'Yes' if present else 'No'}")
-print("One Page:", is_one_page(pdf_path))
-print("First Person Pronouns:", contains_first_person_pronouns(text))
+# print("Phone Number:", find_phone_number(text))
+# print("Email Address:", find_email_address(text))
+# print("Address:", find_address(text))
+# category_presence = check_categories(text, categories)
+# for category, present in category_presence.items():
+#     print(f"{category}: {'Yes' if present else 'No'}")
+# print("One Page:", is_one_page(pdf_path))
+# print("First Person Pronouns:", contains_first_person_pronouns(text))
+
+
+@app.post("/parse-resume/")
+async def parse_resume(file: UploadFile = File(...)):
+    contents = await file.read()
+    text = extract_text_from_pdf(contents)
+    
+    data = {
+        "Phone Number": find_phone_number(text),
+        "Email Address": find_email_address(text),
+        "Address": find_address(text),
+        "Categories": check_categories(text, categories),
+        "One Page": is_one_page(contents),
+        "First Person Pronouns": contains_first_person_pronouns(text)
+    }
+    
+    return data
