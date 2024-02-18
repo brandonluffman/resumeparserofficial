@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from actionwords import actionWordsList
 import PyPDF2
 import re
+import io
 
 
 
@@ -27,14 +28,20 @@ categories = {
 
 #### Resume Text Extraction ######
 
-def extract_text_from_pdf(pdf_path):
-    with open(pdf_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
-        text = ''
-        for page in reader.pages:
-            text += page.extract_text() + '\n'
-    return text
+# def extract_text_from_pdf(pdf_path):
+#     with open(pdf_path, 'rb') as file:
+#         reader = PyPDF2.PdfReader(file)
+#         text = ''
+#         for page in reader.pages:
+#             text += page.extract_text() + '\n'
+#     return text
 
+def extract_text_from_pdf(pdf_bytes):
+    reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+    text = ''
+    for page in reader.pages:
+        text += page.extract_text() + '\n'
+    return text
 # Example usage
 # pdf_path = '/Users/brandonluffman/resumeparserofficial/resume.pdf'
 # text = extract_text_from_pdf(pdf_path)
@@ -87,10 +94,15 @@ def check_categories(text, categories):
     
 # One Page #
 
-def is_one_page(pdf_path):
-    with open(pdf_path, 'rb') as file:
-        reader = PyPDF2.PdfReader(file)
-        return len(reader.pages) == 1
+def is_one_page(text):
+    return True
+
+# def is_one_page(pdf_bytes):
+#     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+#     text = ''
+#     for page in reader.pages:
+#         text += page.extract_text() + '\n'
+#     return text
 
 # First Person Pronouns #
     
