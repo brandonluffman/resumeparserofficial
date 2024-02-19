@@ -6,7 +6,8 @@ import re
 import io
 from sklearn.feature_extraction.text import TfidfVectorizer
 from collections import Counter
-
+from pdfminer.high_level import extract_pages
+from pdfminer.layout import LTTextBox, LTTextLine
 
 
 app = FastAPI()
@@ -28,13 +29,53 @@ categories = {
 }
 
 
-#### Resume Text Extraction ######
-def extract_text_from_pdf(pdf_bytes):
-    reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
-    text = ''
-    for page in reader.pages:
-        text += page.extract_text() + '\n'
+def preprocess_text(text):
+    # Convert to lowercase
+    text = text.lower()
+    # Remove numbers
+    text = re.sub(r'\d+', '', text)
     return text
+
+#### Resume Text Extraction ######
+# def extract_text_from_pdf(pdf_bytes):
+#     reader = PyPDF2.PdfReader(io.BytesIO(pdf_bytes))
+#     text = ''
+#     for page in reader.pages:
+#         text += page.extract_text() + '\n'
+#     return text
+
+def is_continuation_of_previous(prev_text, current_text):
+    if not prev_text or not current_text:
+        return False
+    bullet_point_condition = prev_text[-1] in {'•', '-', '*', '>', '+'}
+    end_condition = not prev_text[-1] in {'.', '!', '?'}
+    continuation_condition = current_text[0].islower()
+
+    return (end_condition and continuation_condition) or bullet_point_condition
+
+def analyze_layout(file_like):
+    previous_text = None
+    extracted_content = []
+
+    for page_layout in extract_pages(file_like):
+        for element in page_layout:
+            if isinstance(element, LTTextBox):
+                for text_line in element:
+                    if isinstance(text_line, LTTextLine):
+                        current_text = text_line.get_text().strip()
+
+                        if is_continuation_of_previous(previous_text, current_text):
+                            previous_text += ' ' + current_text
+                        else:
+                            if previous_text:
+                                extracted_content.append(previous_text)
+                            previous_text = current_text
+
+    # Append the last line
+    if previous_text:
+        extracted_content.append(previous_text)
+
+    return '\n'.join(extracted_content)
 
 
 
@@ -155,8 +196,10 @@ def check_quantify(text):
 @app.post("/parse-resume/")
 async def parse_resume(file: UploadFile = File(...)):
     contents = await file.read()
-    text = extract_text_from_pdf(contents)
+    file_like = io.BytesIO(contents)
+    text = analyze_layout(file_like)
 
+    print(text)
     data = {
         "Phone Number": find_phone_number(text),
         "Email Address": find_email_address(text),
@@ -182,7 +225,8 @@ async def parse_resume(file: UploadFile = File(...)):
 @app.post("/analyze-tfidf/")
 async def analyze_tfidf(file: UploadFile = File(...)):
     contents = await file.read()
-    text = extract_text_from_pdf(contents)
+    file_like = io.BytesIO(contents)
+    text = analyze_layout(file_like)
 
     # Remove numbers
     text = re.sub(r'\d+', '', text)
@@ -208,18 +252,12 @@ async def analyze_tfidf(file: UploadFile = File(...)):
 
     return sorted_tfidf_dict
 
-def preprocess_text(text):
-    # Convert to lowercase
-    text = text.lower()
-    # Remove numbers
-    text = re.sub(r'\d+', '', text)
-    return text
-
 @app.post("/analyze-texts/")
 async def analyze_texts(job_description: str = Form(...), resume: UploadFile = File(...)):
     # Extract text from resume PDF
-    resume_contents = await resume.read()
-    resume_text = extract_text_from_pdf(resume_contents)
+    contents = await resume.read()
+    file_like = io.BytesIO(contents)
+    text = analyze_layout(file_like)
 
     # Preprocess job description and resume text
     job_description = preprocess_text(job_description)
