@@ -257,7 +257,7 @@ async def analyze_texts(job_description: str = Form(...), resume: UploadFile = F
     # Extract text from resume PDF
     contents = await resume.read()
     file_like = io.BytesIO(contents)
-    text = analyze_layout(file_like)
+    resume_text = analyze_layout(file_like)
 
     # Preprocess job description and resume text
     job_description = preprocess_text(job_description)
