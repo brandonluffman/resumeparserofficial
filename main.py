@@ -222,35 +222,12 @@ async def parse_resume(file: UploadFile = File(...)):
 
 
 
-@app.post("/analyze-tfidf/")
+@app.post("/extract-text/")
 async def analyze_tfidf(file: UploadFile = File(...)):
     contents = await file.read()
     file_like = io.BytesIO(contents)
     text = analyze_layout(file_like)
-
-    # Remove numbers
-    text = re.sub(r'\d+', '', text)
-
-    # Convert the text into a list for the TfidfVectorizer
-    text_list = [text]
-
-    # Initialize the TfidfVectorizer with English stopwords
-    vectorizer = TfidfVectorizer(stop_words='english')
-
-    # Fit and transform the text data
-    tfidf_matrix = vectorizer.fit_transform(text_list)
-
-    # Get the feature names (words) and their TF-IDF scores
-    feature_names = vectorizer.get_feature_names_out()
-    tfidf_scores = tfidf_matrix.toarray().flatten()
-
-    # Combine the words and their scores into a dictionary
-    tfidf_dict = dict(zip(feature_names, tfidf_scores))
-
-    # Sort the dictionary by TF-IDF scores in descending order
-    sorted_tfidf_dict = dict(sorted(tfidf_dict.items(), key=lambda item: item[1], reverse=True))
-
-    return sorted_tfidf_dict
+    return text
 
 @app.post("/analyze-texts/")
 async def analyze_texts(job_description: str = Form(...), resume: UploadFile = File(...)):
