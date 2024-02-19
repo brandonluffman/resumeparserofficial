@@ -227,7 +227,7 @@ async def analyze_tfidf(file: UploadFile = File(...)):
     contents = await file.read()
     file_like = io.BytesIO(contents)
     text = analyze_layout(file_like)
-    return text
+    return {"text": text}
 
 @app.post("/analyze-texts/")
 async def analyze_texts(job_description: str = Form(...), resume: UploadFile = File(...)):
