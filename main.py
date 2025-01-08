@@ -198,6 +198,7 @@ async def parse_resume(file: UploadFile = File(...)):
     contents = await file.read()
     file_like = io.BytesIO(contents)
     text = analyze_layout(file_like)
+    print(text)
 
     print(text)
     data = {
@@ -227,6 +228,7 @@ async def analyze_tfidf(file: UploadFile = File(...)):
     contents = await file.read()
     file_like = io.BytesIO(contents)
     text = analyze_layout(file_like)
+    print(text)
     return text
 
 @app.post("/analyze-texts/")
